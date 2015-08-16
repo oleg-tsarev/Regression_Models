@@ -1,22 +1,113 @@
 ---
 title: "Exploring the relationship between a transmission type and miles per gallon"
-author: "oleg"
-date: "August 12, 2015"
-output: html_document
+author: "Oleg Tsarev"
+geometry: margin=0.5cm
+documentclass: article
+output:
+  pdf_document:
+    highlight: haddock
+  html_document: default
+classoption: a4paper
 ---
+## **EXECUTIVE SUMMARY**
+Motor Trend is a magazine about the automobile industry. Looking at a data set of a collection of cars, in this article we explore the relationship between a set of variables and miles per gallon (MPG). Particularly we will answer on the following two questions:  
+&nbsp; &nbsp; &nbsp; 1. Is an automatic or manual transmission better for MPG?  
+&nbsp; &nbsp; &nbsp; 2. Quantify the MPG difference between automatic and manual transmissions?  
+Based on our analyses, corresponding answers are:  
+&nbsp; &nbsp; &nbsp; 1. Manual transmission are better for MPG.  
+&nbsp; &nbsp; &nbsp; 2. The cars with manual transmission have 2.9 more miles per one gallon than cars with automatic transmission.
+  
+## **DATA PROCESSING**
+We will analyze dataset *mtcars* which comprises fuel consumption and 10 aspects of automobile design and performance for 32 automobiles (1973–74 models).
+We transform variable with type of transmission (automatic or manual) from numeric type to factors. 
+```{r DP01}
+data("mtcars"); mtcars_f <- mtcars;
+mtcars_f$am <- factor(mtcars_f$am, labels = c("Automatic","Manual"))
+```  
+  
+## **EXPLORATORY DATA ANALYSIS**
+At first, let's look on the MPG distribution by automatic and manual transmission.
+```{r EDA01,fig.height=2,fig.width=9}
+library(ggplot2)
+q <- ggplot(data = mtcars_f, aes(x = am, y = mpg)) + geom_boxplot() 
+q + ggtitle('MPG by transmission') + labs(x = "Transmission", y = "MPG")
+```
+Above you can see that the mean of MPG with automatic transmission is lower than with manual transmission.
+Let's use hypothesis test to investigate it.
+```{r EDA02, results='hide'}
+t.t <- t.test(mtcars_f[mtcars_f$am == "Automatic","mpg"],mtcars_f[mtcars_f$am == "Manual","mpg"]); t.t
+```
+Code listing you can see in the Appendix 1. The null hypothesis here is that the difference between the mean of MPG  with automatic transmission and the mean of MPG with manual transmission is zero. As you can see p-value = `r t.t$p.value` < 5%, therefore we reject the null hypothesis. So we can say with 95% probability that mean of MPG with automatic transmission (17.15) is lower than mean of MPG with manual transmission (24.39). Therefore we can answer on the first question: **manual transmission is better for MPG**.
+  
+## **REGRESSION MODELS**
+Now let's quantify the MPG difference between automatic and manual transmissions.
+For this purpose we will create two regression models:  a. simple linear regression, where MPG depends only on the transmission type; b. multiple linear regression. Our **strategy for model selection** is to choose model with the higher rate of explained variance and check it by using *anova* fucntion.
+  
+#### Simple linear regression
+```{r RM01,results='hide'}
+slr <- lm(mpg ~ am, data = mtcars_f); summary(slr)
+```
+Code listing you can see in the Appendix 2. Intepreting the outcome you can see that p-value < 5%, so we can say that on average cars with manual transmission have `r round(slr$coefficients[2][[1]],1)` miles more per one gallon of fuel. But adjusted R^2^ = 0.3385, so it means that we can explain only 34% of variance of mpg. It is not enough.
+  
+#### Multiple linear regression
+Let's use *step* function - automatic variable selection function: 
+```{r RM02}
+mlr <- step(lm(mpg ~ ., data = mtcars),trace = 0, steps = 10000,direction = "both"); 
+summary(mlr)
+```
+Intepreting the outcome you can see that in this model adjusted R^2^ = 0.8336, so it means that we can explain 83% of variance of mpg.
+  
+Now let's compare these 2 models:
+```{r RM03}
+anova(slr,mlr)
+```
+Intepreting the outcome you can see p-value < 0.05. So second model better explains the variance of MPG.  
+In order to make final decision let's check residuals of the second model - Appendix 3. 
+The residual diagnostics show normal randomly scatereness.
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+## **CONCLUSION**
+As we proved above, manual transmission is better for MPG. But quantifying the MPG difference between automatic and manual transmissions depends on the considering other variables in the model. We showed that multiple linear regression better explained variance of MPG than simple linear regression. So, based on the multiple regression we can say that **the cars with manual transmission have `r round(mlr$coefficients[4][[1]],1)` more miles per one gallon than cars with automatic transmission**. And weight and acceleration have more impact than transmission type on MPG. So every 1000lb will cause a decrease of `r round(mlr$coefficients[2][[1]],1)` miles per one gallon and every increase of 1/4 mile time will cause an increase of `r round(mlr$coefficients[3][[1]],1)` miles per one gallon.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r}
-summary(cars)
+\pagebreak
+## **Appendix 1**
+```{r Appendix1_EDA02}
+t.t <- t.test(mtcars_f[mtcars_f$am == "Automatic","mpg"],mtcars_f[mtcars_f$am == "Manual","mpg"]); t.t
 ```
 
-You can also embed plots, for example:
-
-```{r, echo=FALSE}
-plot(cars)
+## **Appendix 2**
+```{r Appendix2_RM01}
+slr <- lm(mpg ~ am, data = mtcars_f); summary(slr)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+## **Appendix 3**
+```{r Appendix5,fig.height=3}
+par(mfrow=c(2,2),mar=c(2,2,2,2))
+plot(mlr)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
