@@ -1,12 +1,12 @@
 ---
 title: "Exploring the relationship between a transmission type and miles per gallon"
 author: "Oleg Tsarev"
-geometry: margin=0.5cm
 documentclass: article
 output:
+  html_document: default
   pdf_document:
     highlight: haddock
-  html_document: default
+geometry: margin=0.5cm
 classoption: a4paper
 ---
 ## **EXECUTIVE SUMMARY**
@@ -41,7 +41,7 @@ Code listing you can see in the Appendix 1. The null hypothesis here is that the
   
 ## **REGRESSION MODELS**
 Now let's quantify the MPG difference between automatic and manual transmissions.
-For this purpose we will create two regression models:  a. simple linear regression, where MPG depends only on the transmission type; b. multiple linear regression. Our **strategy for model selection** is to choose model with the higher rate of explained variance and check it by using *anova* fucntion.
+For this purpose we will create two regression models:  a. simple linear regression, where MPG depends only on the transmission type; b. multiple linear regression. Our **strategy for model selection is to choose model with the higher rate of explained variance and check it by using** *anova* **fucntion**.
   
 #### Simple linear regression
 ```{r RM01,results='hide'}
@@ -61,12 +61,12 @@ Now let's compare these 2 models:
 ```{r RM03}
 anova(slr,mlr)
 ```
-Intepreting the outcome you can see p-value < 0.05. So second model better explains the variance of MPG.  
+Intepreting the outcome you can see p-value < 0.05, therefore we reject the null hypothesis and we can say that our multiple model is statistically different from linear regresson model and based on RSS (169.29 < 720.90) much better explains the variance of MPG.  
 In order to make final decision let's check residuals of the second model - Appendix 3. 
-The residual diagnostics show normal randomly scatereness.
+The residual diagnostics show no specific patterns, basically they show normal randomly scatereness.
 
 ## **CONCLUSION**
-As we proved above, manual transmission is better for MPG. But quantifying the MPG difference between automatic and manual transmissions depends on the considering other variables in the model. We showed that multiple linear regression better explained variance of MPG than simple linear regression. So, based on the multiple regression we can say that **the cars with manual transmission have `r round(mlr$coefficients[4][[1]],1)` more miles per one gallon than cars with automatic transmission**. And weight and acceleration have more impact than transmission type on MPG. So every 1000lb will cause a decrease of `r round(mlr$coefficients[2][[1]],1)` miles per one gallon and every increase of 1/4 mile time will cause an increase of `r round(mlr$coefficients[3][[1]],1)` miles per one gallon.
+As we proved above, manual transmission is better for MPG. But quantifying the MPG difference between automatic and manual transmissions depends on the considering other variables in the model. We showed that multiple linear regression better explained variance of MPG than simple linear regression. So, based on the multiple regression we can say that **the cars with manual transmission have `r round(mlr$coefficients[4][[1]],1)` more miles per one gallon than cars with automatic transmission and measure of uncertainty this conclusion is 83%** (share of explained variance). And weight and acceleration have more impact than transmission type on MPG. So every 1000lb will cause a decrease of `r -round(mlr$coefficients[2][[1]],1)` miles per one gallon and every increase of 1/4 mile time will cause an increase of `r round(mlr$coefficients[3][[1]],1)` miles per one gallon.
 
 \pagebreak
 ## **Appendix 1**
